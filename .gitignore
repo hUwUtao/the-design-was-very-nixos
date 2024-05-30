@@ -1,0 +1,3 @@
+dat
+.env
+secrets/*.env

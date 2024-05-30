@@ -1,0 +1,56 @@
+services:
+  rds:
+    image: redis
+    ports:
+      - 127.0.0.1:6379:6379
+    volumes:
+      -  ./dat/rds:/data
+    command: --requirepass rdspwd
+  mdb:
+    image: mariadb
+    ports:
+      - 127.0.0.1:3306:3306
+    volumes: 
+      - ./dat/mdb:/var/lib/mysql
+    env_file:
+      - .env
+  cdy:
+    image: caddy:2.8-alpine
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./dat/cdy/d:/data
+      - ./dat/cdy/c:/config
+      - ./src/www:/www
+      - ./src/Caddyfile:/etc/caddy/Caddyfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    links:
+      - php
+  php:
+    build: ./src/php
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=mdb
+      - DB_PORT=3306
+      - DB_DATABASE=panel
+      - DB_USERNAME=pt
+    env_file:
+      - .env
+    volumes:
+      - ./src/php.ini:/usr/local/etc/php/conf.d/0_all.ini
+      - ./src/www:/www
+    links:
+      - mdb
+      - rds
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.128.0.0/16
+          gateway: 10.128.0.1

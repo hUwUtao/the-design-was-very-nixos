@@ -1,0 +1,12 @@
+gavefood.net {
+	respond / "soon_tm"
+}
+ns5013658.ip-15-235-145.net dash.gavefood.net {
+	root * /www/pterodactyl/public
+	php_fastcgi php:9000
+	file_server
+}
+
+sg0.gavefood.net {
+	respond / "pwned or not?"
+}
