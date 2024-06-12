@@ -10,10 +10,13 @@ services:
     image: mariadb
     ports:
       - 127.0.0.1:3306:3306
-    volumes: 
+    volumes:
       - ./dat/mdb:/var/lib/mysql
     env_file:
       - .env
+    networks:
+      - default
+      - pterodactyl_nw
   cdy:
     image: caddy:2.8-alpine
     cap_add:
@@ -31,22 +34,20 @@ services:
       - "host.docker.internal:host-gateway"
     links:
       - php
+      - pma
   php:
     build: ./src/php
-    environment:
-      - DB_CONNECTION=mysql
-      - DB_HOST=mdb
-      - DB_PORT=3306
-      - DB_DATABASE=panel
-      - DB_USERNAME=pt
-    env_file:
-      - .env
     volumes:
       - ./src/php.ini:/usr/local/etc/php/conf.d/0_all.ini
       - ./src/www:/www
     links:
       - mdb
       - rds
+  pma:
+    image: phpmyadmin
+    links:
+      - mdb:db
+
 networks:
   default:
     driver: bridge
@@ -54,3 +55,5 @@ networks:
       config:
         - subnet: 10.128.0.0/16
           gateway: 10.128.0.1
+  pterodactyl_nw:
+    external: true
